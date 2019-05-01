@@ -1,11 +1,6 @@
 import pandas as pd
 import re
 
-
-data = pd.read_csv("/home/evsv/Documents/Spring 2019 Academics/Advanced ML/Final Project/DetoxiPy/src/featurecreation/train.csv")
-
-comment_data = data["comment_text"]
-
 def seq_counter(text, regex):
     """
     Utility function to count the number of occurrences of a regular 
@@ -19,10 +14,10 @@ def seq_counter(text, regex):
     :rtype: int
     """
     rgx = re.compile(regex)
-    occurrences = re.findall(text, regex)
+    occurrences = re.findall(rgx, text)
     num_of_occurrences = len(occurrences)
 
-    return num_of_occurrences
+    return num_of_occurrences #str(occurrences)
 
 def set_seq_counter(text, set_of_seq):
     """
@@ -40,10 +35,11 @@ def set_seq_counter(text, set_of_seq):
     """
     seq_count_dict = {}
     for seq in set_of_seq:
+        # print(seq + "\n")
         num_of_occurrences = seq_counter(text, seq)
         seq_count_dict[seq] = num_of_occurrences
     
-    return seq_count_dict
+    return sum(seq_count_dict.values())
 
 # TESTING SCRIPTS BELOW
 
