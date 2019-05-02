@@ -1,24 +1,25 @@
-import pandas as import pd
+import pandas as pd
 import numpy as np 
 import string
+import re
 import nltk
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
-
 
 class DataPrep:
     def __init__(self):
         self.tokenizer = TweetTokenizer()
 
     def tokenize(self, text):
-        return self.tokenizer(text)
+        tknzr = self.tokenizer
+        return tknzr.tokenize(text)
 
     def stemmer(self, text):
         text = self.tokenize(text)
         stemmer = SnowballStemmer('english')
         stemmed_words = [stemmer.stem(word) for word in text]
-        return text = " ".join(stemmed_words)
+        return " ".join(stemmed_words)
 
     def rm_whitespace(self, text):        
         spaces = ['\u200b', '\u200e', '\u202a', '\u202c', '\ufeff', \
@@ -32,7 +33,7 @@ class DataPrep:
     def rm_punct(self, text):
         punct = "/-'?!.,#$%\'()*+-/:;<=>@[\\]^_`{|}~" + '""“”’' + '∞θ÷α•à−β∅³π‘₹´°£€\×™√²—–&'
         for p in punct:
-            text = text.replace(p, f' {p} ')     
+            text = text.replace(p, ' ')     
         return text
 
     def map_punct(self, text):
@@ -43,17 +44,16 @@ class DataPrep:
         for p in mapping:
             text = text.replace(p, mapping[p])    
         for p in punct:
-            text = text.replace(p, f' {p} ')     
+            text = text.replace(p, ' ')     
         return text
 
     def rm_stopword(self, text):
         stops = set(stopwords.words("english"))
-        text = [w for w in text if not w in stops and len(w) >= 3]
+        text = [w for w in text if w not in stops and len(w) >= 3]
         return " ".join(text)
     
     def lower_str(self, text):
         return text.lower()
-
 
     def clean(self, text, rmCaps, rmPunct, mapPunct, rmStop, stem):
         '''
@@ -64,16 +64,16 @@ class DataPrep:
         5. Option to lemmatize/stem
         '''
         
-        self.rm_whitespace()
         if rmCaps == True:
-            self.lower_str(text)
+            text = self.lower_str(text)
         if rmPunct == True:
-            self.rm_punct(text)
+            text = self.rm_punct(text)
         if mapPunct == True:
-            self.map_punct(text)
+            text = self.map_punct(text)
         if rmStop == True:
-            self.rm_stopword(text)
+            text = self.rm_stopword(text)
         if stem == True:
-            self.stemmer(text)
+            text = self.stemmer(text)
+        text = self.rm_whitespace(text)
         
         return text
