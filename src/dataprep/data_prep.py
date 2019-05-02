@@ -1,7 +1,10 @@
 import pandas as import pd
 import numpy as np 
+import string
 import nltk
 from nltk.tokenize import TweetTokenizer
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
 
 
 class DataPrep:
