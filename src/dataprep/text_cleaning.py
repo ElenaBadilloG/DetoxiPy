@@ -1,26 +1,21 @@
-import os
-import numpy as np
-import pandas as pd
-import operator 
-import re
-import gensim
-
-
-# Global params
-SPL_SEQ_DICT = {"emojis": [":)", ":-)", ":(", ":-(", ":-/", ":/", "-_-", ":|",  ":-|"],
-                "proper nouns": ["republican", "democrat", "trump", "clinton", "hillary"]}
-punct_mapping = {"‘": "'", "₹": "e", "´": "'", "°": "", "€": "e", "™": "tm", "√": " sqrt ",
+# TEXT CLEANING GLOBAL VARS
+PROP_NOUNS = ["republican", "democrat", "trump", "clinton", "hillary"]
+EMOJIS = [":)", ":-)", ":(", ":-(", ":-/", ":/", "-_-", ":|",  ":-|"]
+PUNCT_MAP = {"‘": "'", "₹": "e", "´": "'", "°": "", "€": "e", "™": "tm", "√": " sqrt ",
                  "×": "x", "²": "2", "—": "-", "–": "-", "’": "'", "_": "-", "`": "'",
                  '“': '"', '”': '"', '“': '"', "£": "e", '∞':'infinity', 'θ': 'theta',
                  '÷': '/', 'α': 'alpha','•': '.', 'à': 'a', '−': '-', 'β': 'beta', '∅': '',
             '³': '3', 'π': 'pi', }
+PUNCT = "/-'?!.,#$%\'()*+-/:;<=>@[\\]^_`{|}~" + '""“”’' + '∞θ÷α•à−β∅³π‘₹´°£€\×™√²—–&'
+APOSTROPHES = ["’", "‘", "´", "`"]
+SPECIAL_CHARS = {'\u200b': ' ', '…': ' ... ', '\ufeff': '', 'करना': '', 'है': ''}  # Other special characters that I have to deal with in last
+SPACES = ['\u200b', '\u200e', '\u202a', '\u202c', '\ufeff', \
+            '\uf0d8', '\u2061', '\x10', '\x7f', '\x9d', '\xad', '\xa0']
 
-punct = "/-'?!.,#$%\'()*+-/:;<=>@[\\]^_`{|}~" + '""“”’' + '∞θ÷α•à−β∅³π‘₹´°£€\×™√²—–&'
-
-mispell_dict = {'SB91':'senate bill','tRump':'trump','utmterm':'utm term','FakeNews':'fake news','Gʀᴇat':'great','ʙᴏᴛtoᴍ':'bottom','washingtontimes':'washington times','garycrum':'gary crum','htmlutmterm':'html utm term','RangerMC':'car','TFWs':'tuition fee waiver','SJWs':'social justice warrior','Koncerned':'concerned','Vinis':'vinys','Yᴏᴜ':'you','Trumpsters':'trump','Trumpian':'trump','bigly':'big league','Trumpism':'trump','Yoyou':'you','Auwe':'wonder','Drumpf':'trump','utmterm':'utm term','Brexit':'british exit','utilitas':'utilities','ᴀ':'a', '😉':'wink','😂':'joy','😀':'stuck out tongue', 'theguardian':'the guardian','deplorables':'deplorable', 'theglobeandmail':'the globe and mail', 'justiciaries': 'justiciary','creditdation': 'Accreditation','doctrne':'doctrine','fentayal': 'fentanyl','designation-': 'designation','CONartist' : 'con-artist','Mutilitated' : 'Mutilated','Obumblers': 'bumblers','negotiatiations': 'negotiations','dood-': 'dood','irakis' : 'iraki','cooerate': 'cooperate','COx':'cox','racistcomments':'racist comments','envirnmetalists': 'environmentalists',}
+SPELL_CORRECT = {'SB91':'senate bill','tRump':'trump','utmterm':'utm term','FakeNews':'fake news','Gʀᴇat':'great','ʙᴏᴛtoᴍ':'bottom','washingtontimes':'washington times','garycrum':'gary crum','htmlutmterm':'html utm term','RangerMC':'car','TFWs':'tuition fee waiver','SJWs':'social justice warrior','Koncerned':'concerned','Vinis':'vinys','Yᴏᴜ':'you','Trumpsters':'trump','Trumpian':'trump','bigly':'big league','Trumpism':'trump','Yoyou':'you','Auwe':'wonder','Drumpf':'trump','utmterm':'utm term','Brexit':'british exit','utilitas':'utilities','ᴀ':'a', '😉':'wink','😂':'joy','😀':'stuck out tongue', 'theguardian':'the guardian','deplorables':'deplorable', 'theglobeandmail':'the globe and mail', 'justiciaries': 'justiciary','creditdation': 'Accreditation','doctrne':'doctrine','fentayal': 'fentanyl','designation-': 'designation','CONartist' : 'con-artist','Mutilitated' : 'Mutilated','Obumblers': 'bumblers','negotiatiations': 'negotiations','dood-': 'dood','irakis' : 'iraki','cooerate': 'cooperate','COx':'cox','racistcomments':'racist comments','envirnmetalists': 'environmentalists',}
 
 # ref: https://www.kaggle.com/adityaecdrid/public-version-text-cleaning-vocab-65
-contraction_mapping = {
+CONTRACTION_MAP = {
     "Trump's" : 'trump is',"'cause": 'because',',cause': 'because',';cause': 'because',"ain't": 'am not','ain,t': 'am not',
     'ain;t': 'am not','ain´t': 'am not','ain’t': 'am not',"aren't": 'are not',
     'aren,t': 'are not','aren;t': 'are not','aren´t': 'are not','aren’t': 'are not',"can't": 'cannot',"can't've": 'cannot have','can,t': 'cannot','can,t,ve': 'cannot have',
@@ -98,42 +93,3 @@ contraction_mapping = {
     'ᴄᴏɴɴᴇᴄᴛɪᴏɴ':'connection','ɪɴᴛᴇʀɴᴇᴛ':'internet','financialpost':'financial post', 'ʜaᴠᴇ':' have ', 'ᴄaɴ':' can ', 'Maᴋᴇ':' make ', 'ʀᴇʟɪaʙʟᴇ':' reliable ', 'ɴᴇᴇᴅ':' need ',
     'ᴏɴʟʏ':' only ', 'ᴇxᴛʀa':' extra ', 'aɴ':' an ', 'aɴʏᴏɴᴇ':' anyone ', 'sᴛaʏ':' stay ', 'Sᴛaʀᴛ':' start', 'SHOPO':'shop',
     }
-
-    # Util text functions
-
-    def build_vocab(texts):
-    sentences = texts.apply(lambda x: x.split()).values
-    vocab = {}
-    for sentence in sentences:
-        for word in sentence:
-            try:
-                vocab[word] += 1
-            except KeyError:
-                vocab[word] = 1
-    return vocab
-
-def clean_contractions(text, mapping):
-    specials = ["’", "‘", "´", "`"]
-    for s in specials:
-        text = text.replace(s, "'")
-    text = ' '.join([mapping[t] if t in mapping else t for t in text.split(" ")])
-    return text
-
-
-def clean_special_chars(text, punct, mapping):
-    for p in mapping:
-        text = text.replace(p, mapping[p])
-    for p in punct:
-        text = text.replace(p, f' {p} ')
-    specials = {'\u200b': ' ', '…': ' ... ', '\ufeff': '', 'करना': '', 'है': ''}  # Other special characters that I have to deal with in last
-    for s in specials:
-        text = text.replace(s, specials[s])
-    return text
-
-def correct_spelling(x, mispell_dic):
-    '''
-    Very simple correction for commonly mispelled words/terms in the text
-    '''
-    for word in dic.keys():
-        x = x.replace(word, mispell_dic[word])
-    return x
