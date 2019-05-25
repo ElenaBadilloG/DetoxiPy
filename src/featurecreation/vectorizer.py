@@ -12,7 +12,8 @@ class BaseVectorizer(ABC):
     
 class FreqVectorizer(tud.Dataset, BaseVectorizer):
 
-    def __init__(self, dataset, ngram_range, vocab_size, vect_type):
+    def __init__(self, dataset, ngram_range, vocab_size, vect_type, 
+                 tokenizer = None):
         """
         Class to extract a Bag of Words sparse-matrix given a an iterable (list, 
         series, etc) of texts. Implements default tokenizers under the hood. 
@@ -31,10 +32,12 @@ class FreqVectorizer(tud.Dataset, BaseVectorizer):
         """
         if vect_type.lower() == "tf-idf":    
             self.vectorizer = TfidfVectorizer(ngram_range = ngram_range, 
-                                                max_features = vocab_size)
+                                              max_features = vocab_size,
+                                              tokenizer = tokenizer)
         elif vect_type.lower() == "bow":
             self.vectorizer = CountVectorizer(ngram_range = ngram_range, 
-                                                max_features = vocab_size)
+                                              max_features = vocab_size,
+                                              tokenizer = tokenizer)
         self.freq_vect = self._vectorize(dataset)
 
     def _vectorize(self, dataset):
