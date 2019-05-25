@@ -1,4 +1,6 @@
+from collections import Counter
 import pandas as pd
+import numpy as np
 import re
 
 def seq_counter(text, regex):
@@ -41,17 +43,24 @@ def set_seq_counter(text, set_of_seq):
     
     return sum(seq_count_dict.values())
 
-# TESTING SCRIPTS BELOW
+class VocabularyHelper:
 
-# import utils.global_vals as gv
-# import re
+    def __init__(self, text_data_series, reqd_vocab_size, text_prepper):
 
-# sample_txt = "WHAT THE F**K IS WRONG with  these  people?! Eh11 1219 a the's "
-# sample_txt_2 = "*cant c*nt c*** ****"
-# rgx = gv.RGX_PURE_WORD
-# rgx_stp = "the"
-# re.findall(rgx, sample_txt_2)
+        self.vocab_size = reqd_vocab_size
+        self.vocab = self._build_vocab_counter(text_data_series = text_data_series,
+                                               text_prepper = text_prepper)
+        
+        self.word_to_ix = {k[0]: v+1 for v, k in enumerate(self.vocab)}
+        self.word_to_ix["UNK"] = 0
+        self.vocab = set(self.word_to_ix.keys())
+        
 
+    def _build_vocab_counter(self, text_data_series, text_prepper):
 
-
-# print(gv.RGX_WORD_LOWER)
+        text_token_array = [text_prepper.tokenize(string) 
+                                for string in text_data_series]
+        text_token_array = [word for sublist in text_token_array 
+                                    for word in sublist]
+        vocab = Counter(text_token_array).most_common(self.vocab_size - 1)
+        return vocab
