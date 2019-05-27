@@ -29,6 +29,8 @@ class FreqVectorizer(tud.Dataset, BaseVectorizer):
         :param vocab_size: Top n most common words to be included for the BOW 
                            matrix
         :type vocab_size: int
+        :param tokenizer: Tokenizer to be used to convert a sentence into tokens
+        :type tokenizer: Callable
         """
         if vect_type.lower() == "tf-idf":    
             self.vectorizer = TfidfVectorizer(ngram_range = ngram_range, 

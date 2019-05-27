@@ -46,7 +46,20 @@ def set_seq_counter(text, set_of_seq):
 class VocabularyHelper:
 
     def __init__(self, text_data_series, reqd_vocab_size, text_prepper):
-
+        """
+        Class to provide a helper for keeping track of the vocabulary space 
+        with a vocabulary set and a word-to-index dictionary mapping. 
+        
+        :param text_data_series: Input data series from which the vocabulary 
+                                 and mapping needs to be constructed 
+        :type text_data_series: Iterable containing the strings constituting 
+                                the corpus
+        :param reqd_vocab_size: The size of the vocabulary to be used. The top
+                                n words are chosen to construct the vocabulary
+        :type reqd_vocab_size: int
+        :param text_prepper: Text Preparation object form dataprep/textprep.py
+        :type text_prepper: TextPrep object
+        """
         self.vocab_size = reqd_vocab_size
         self.vocab = self._build_vocab_counter(text_data_series = text_data_series,
                                                text_prepper = text_prepper)
@@ -57,7 +70,20 @@ class VocabularyHelper:
         
 
     def _build_vocab_counter(self, text_data_series, text_prepper):
-
+        """
+        Private function to build a counter containing the words in the corpus
+        and the counts of each word.
+        
+        :param text_data_series: Input data series from which the vocabulary 
+                                 and mapping needs to be constructed 
+        :type text_data_series: Iterable containing the strings constituting 
+                                the corpus
+        :param text_prepper: Text Preparation object form dataprep/textprep.py
+        :type text_prepper: TextPrep object
+        :return: Returns a counter containing the words and their frequencies 
+                 in the total corpus
+        :rtype: Counter
+        """
         text_token_array = [text_prepper.tokenize(string) 
                                 for string in text_data_series]
         text_token_array = [word for sublist in text_token_array 
