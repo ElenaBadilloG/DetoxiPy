@@ -2,6 +2,7 @@ from collections import Counter
 import pandas as pd
 import numpy as np
 import re
+import pickle
 
 def seq_counter(text, regex):
     """
@@ -45,30 +46,55 @@ def set_seq_counter(text, set_of_seq):
 
 class VocabularyHelper:
 
-    def __init__(self, text_data_series, reqd_vocab_size, text_prepper):
+    def __init__(self, init_type, text_data_series = None, reqd_vocab_size = None, 
+                 text_prepper = None, word_to_ix_path = None, vocab_path = None):
         """
         Class to provide a helper for keeping track of the vocabulary space 
         with a vocabulary set and a word-to-index dictionary mapping. 
         
-        :param text_data_series: Input data series from which the vocabulary 
-                                 and mapping needs to be constructed 
-        :type text_data_series: Iterable containing the strings constituting 
-                                the corpus
-        :param reqd_vocab_size: The size of the vocabulary to be used. The top
-                                n words are chosen to construct the vocabulary
-        :type reqd_vocab_size: int
-        :param text_prepper: Text Preparation object form dataprep/textprep.py
-        :type text_prepper: TextPrep object
-        """
-        self.vocab_size = reqd_vocab_size
-        self.vocab = self._build_vocab_counter(text_data_series = text_data_series,
-                                               text_prepper = text_prepper)
-        
-        self.word_to_ix = {k[0]: v+1 for v, k in enumerate(self.vocab)}
-        self.word_to_ix["UNK"] = 0
-        self.vocab = set(self.word_to_ix.keys())
-        
+        :param init_type: Flag denoting if vocabulary elements need to be 
+                          trained on a new corpus ("train") or if they can
+                          be loaded from pre-defined corpora ("load").
 
+                          If "train", user needs to provide a series of text 
+                          data from which vocabulary elements are to be extracted
+
+                          If "load", user needs to provide paths to previously
+                          defined pickles of word_to_ix dict and vocab set
+
+        :type init_type: str
+        :param text_data_series: Input data series from which the vocabulary 
+                                 and mapping needs to be constructed, 
+                                 defaults to None
+        :type text_data_series: Iterable containing the strings constituting 
+                                the corpus, optional
+        :param reqd_vocab_size: The size of the vocabulary to be used. The top
+                                n words are chosen to construct the vocabulary, 
+                                defaults to None
+        :type reqd_vocab_size: int, optional
+        :param text_prepper: Text Preparation object form dataprep/textprep.py, 
+                             defaults to None
+        :type text_prepper: TextPrep object, optional
+        :param word_to_ix_path: Path containing the pre-trained word to index
+                                dictionary, defaults to None
+        :type word_to_ix_path: str, optional
+        :param vocab_path: Path containing the pre-trained vocabulary set,
+                           defaults to None
+        :type vocab_path: str, optional
+        """
+
+        if init_type.lower() == "train":
+            self.vocab_size = reqd_vocab_size
+            self.vocab = self._build_vocab_counter(text_data_series = text_data_series,
+                                                text_prepper = text_prepper)
+            
+            self.word_to_ix = {k[0]: v+1 for v, k in enumerate(self.vocab)}
+            self.word_to_ix["UNK"] = 0
+            self.vocab = set(self.word_to_ix.keys())
+        elif init_type.lower() == "load":
+            self._load_vocab_elements(word_to_ix_path = word_to_ix_path,
+                                      vocab_path = vocab_path)
+        
     def _build_vocab_counter(self, text_data_series, text_prepper):
         """
         Private function to build a counter containing the words in the corpus
@@ -90,3 +116,38 @@ class VocabularyHelper:
                                     for word in sublist]
         vocab = Counter(text_token_array).most_common(self.vocab_size - 1)
         return vocab
+
+    def export_vocab_element(self, element_type, export_path):
+        """
+        Function to export the word to index mapping as a pickle file.
+        
+        :param element_type: Type of the element to be exported - word_to_ix or vocab
+        :type element_type: str
+        :param export_path: Path where the word to index mapping should be stored
+        :type export_path: str
+        """
+
+        if element_type.lower() == "word_to_ix":
+            with open(export_path, "wb") as file_handle:
+                pickle.dump(self.word_to_ix, file_handle)
+        elif element_type.lower() == "vocab":
+            with open(export_path, "wb") as file_handle:
+                    pickle.dump(self.vocab, file_handle)
+
+    def _load_vocab_elements(self, word_to_ix_path, vocab_path):
+        """
+        Private function to load pre-defined word to index dictionaries and 
+        vocabulary sets.
+        
+        :param word_to_ix_path: Path containing the pre-trained word to index
+                                dictionary
+        :type word_to_ix_path: str
+        :param vocab_path: Path containing the pre-trained vocabulary set
+        :type vocab_path: str
+        """
+        with open(word_to_ix_path, "rb") as file_handle:
+            self.word_to_ix = pickle.load(file_handle)
+        
+        with open(vocab_path, "rb") as file_handle:
+            self.vocab = pickle.load(file_handle)
+    
