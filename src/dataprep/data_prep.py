@@ -6,7 +6,7 @@ import nltk
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
-from text_cleaning import *
+from dataprep.text_cleaning import *
 
 class TextPrep:
     def __init__(self):
