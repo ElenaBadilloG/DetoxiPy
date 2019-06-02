@@ -100,6 +100,9 @@ contraction_mapping = {
     'ᴏɴʟʏ':' only ', 'ᴇxᴛʀa':' extra ', 'aɴ':' an ', 'aɴʏᴏɴᴇ':' anyone ', 'sᴛaʏ':' stay ', 'Sᴛaʀᴛ':' start', 'SHOPO':'shop',
     }
 
+ident_nouns = ['woman', 'women', 'girl', 'girls', 'lady', 'ladies', 'feminist', 'feminism', 'female', 'gay', 'gays', 'black', 'african', 'queer', 'lesbian', 'lesbians', 'trans', 'transgender', 'bisexual', 'bi', 'lgtb', 'homophobic', 'homophobia', 'homo', 'racial', 'muslim', 'islam', 'terrorist', 'terrorism', 'mexican', 'border', 'wall', 'mexico', 'jews', 'jew', 'jewish', 'immigrant', 'illegal']
+ident_pronouns = ['her', 'she', 'SHE', 'HER', 'Sh']
+
     # Util text functions
 
 
@@ -120,5 +123,12 @@ def clean_special_chars(text):
     specials = {'\u200b': ' ', '…': ' ... ', '\ufeff': '', 'करना': '', 'है': ''}  # Other special characters to deal with
     for s in specials:
         text = text.replace(s, specials[s])
+    return text
+
+def replace_identities(text):
+    for n in ident_nouns:
+        text = re.sub(n, 'people', text, flags=re.IGNORECASE)
+    for pn in ident_pronouns:
+        text = re.sub(pn, 'them', text, flags=re.IGNORECASE)
     return text
 
