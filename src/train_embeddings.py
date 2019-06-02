@@ -2,28 +2,41 @@ import pandas as pd
 from dataprep.data_prep import TextPrep 
 from featurecreation.feat_create_utils import VocabularyHelper
 from featurecreation.word_embedder import CbowEmbedder
+from gensim.models import FastText
+import multiprocessing
+from time import time
 
 # READING THE INPUT DATASET
 text_column = "comment_text"
 
-raw_data = pd.read_csv("train.csv", nrows = 1)
+raw_data = pd.read_csv("train.csv")
 raw_data = raw_data[text_column]
 
 # CLEANING THE INPUT TEXT
 text_prepper = TextPrep()
-clean_data = raw_data.apply(text_prepper.clean, rmCaps = False, 
+clean_data = raw_data.apply(text_prepper.clean, rmCaps = True, 
                             mapPunct = True, clSpecial = True, 
-                            spCheck = False, rmStop = True, 
+                            spCheck = False, rmStop = False, 
                             stem = False, mpContract = True)
 
-vocab_helper = VocabularyHelper(init_type = "train",
-                                text_data_series = clean_data, 
-                                reqd_vocab_size = 500, 
-                                text_prepper = text_prepper)
+# TRAINING THE WORD2VEC
+num_cores = multiprocessing.cpu_count()
+embedder = FastText(min_count = 20, window = 2, size = 64, sample = 6e-5, 
+                    alpha = 0.03, min_alpha = 0.0007, negative = 20, 
+                    workers = num_cores - 1)
 
-# TRAINING THE EMBEDDING
-cbw = CbowEmbedder(vocab_size = 500, embeddings_dim = 10, context_size = 2)
-tst = cbw.make_context_tgt_pairs(text_series = clean_data, text_prepper = text_prepper)
+# Tokenising sentences and building vocab
+clean_data = clean_data.apply(text_prepper.tokenize)
+embedder.build_vocab(clean_data, progress_per = 10000)
+t = time()
+print('Time to build vocab: {} mins'.format(round((time() - t) / 60, 2)))
 
-cbw.train_model(input_ngrams = tst, num_of_epochs = 1, vocab_helper = vocab_helper)
-cbw.export_embed_layer("embed.pkl")
+# Training the model
+t = time()
+sample_data = clean_data.sample(100000)
+embedder.train(sample_data, total_examples = 100000, epochs = 30,
+               report_delay = 1)
+print('Time to train the model: {} mins'.format(round((time() - t) / 60, 2)))
+
+# Exporting the model weights
+embedder.wv.save("featurecreation/embeddings/small_sample_vector_100K_ft.kv")
