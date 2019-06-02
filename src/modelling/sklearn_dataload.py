@@ -70,7 +70,8 @@ class DataPrep:
 
 
     def join_features(self, X, feats):
-        return pd.concat([X, feats], axis=1)
+        print('droppingxx')
+        return pd.concat([X.reset_index(), feats], axis=1).drop(columns='index')
 
 
     def get_text(self, data):
