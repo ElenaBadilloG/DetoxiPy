@@ -73,7 +73,8 @@ class Pipeline:
 
         if pipeline_mode.lower() == 'build':
             scorer = self._make_score_fxn()
-            grid_obj = self._train_grid(scorer = scorer, key = grid_model_id_key)
+            print('USING SCORING FUNCTION: {}'.format(scorer))
+            grid_obj = self._train_grid(scorer= scorer, key=grid_model_id_key)
             self._estimator = grid_obj.best_estimator_
         elif pipeline_mode.lower() == 'refresh':
             self._estimator = self._model_refresh(model_obj_path = model_obj_path,
@@ -103,11 +104,11 @@ class Pipeline:
         elif self.scoring == 'precision':
             return make_scorer(self.precision_at_k)
         elif self.scoring == 'recall':            
-            return self.make_scorer(recall_at_k)
+            return make_scorer(self.recall_at_k)
         elif self.scoring == 'auc-roc':
-            return self._make_scorer(self.auc_roc)
+            return make_scorer(self.auc_roc)
         else: # f1 score
-            return self._make_scorer(self.f1_at_k)
+            return make_scorer(self.f1_at_k)
 
     def _train_grid(self, scorer, key):       
         """
@@ -121,7 +122,10 @@ class Pipeline:
         """
         model = self.clf_grid[key]['type']
         parameters = self.clf_grid[key]['grid']
+
+        print(model, parameters)
         clf = GridSearchCV(model, parameters, scoring=scorer, cv=5, return_train_score=True)
+
         clf.fit(self.X_train, self.y_train)
         time_now = dt.now()
         filepath_base = 'models_store'
@@ -207,7 +211,7 @@ class Pipeline:
 
         return accuracy
 
-    def precision_at_k(self, y_test, y_pred_probs, k, k_type):
+    def precision_at_k(self, y_test, y_pred_probs, k):
         """
         Calculate precision of predictions at a threshold k.
         """
@@ -217,17 +221,17 @@ class Pipeline:
 
         return precision
 
-    def recall_at_k(self, y_test, y_pred_probs, k, k_type):
+    def recall_at_k(self, y_test, y_pred_probs, k):
         """
         Calculate recall of predictions at a threshold k.
         """
 
-        preds_at_k = self.generate_binary_at_k(y_pred_probs_sorted, k)
-        recall = recall_score(y_test_sorted, preds_at_k)
+        preds_at_k = self.generate_binary_at_k(y_pred_probs, k)
+        recall = recall_score(y_test, preds_at_k)
 
         return recall
 
-    def f1_at_k(self, y_test, y_pred_probs, k, k_type):
+    def f1_at_k(self, y_test, y_pred_probs, k):
         """
         Calculate F1 score of predictions at a threshold k.
         """
@@ -238,7 +242,7 @@ class Pipeline:
     def auc_roc(self, y_test, y_pred_probs):
         return roc_auc_score(y_test, y_pred_probs)
     
-    def confusion_matrix(self, y_test, y_pred_probs, k, k_type):
+    def confusion_matrix(self, y_test, y_pred_probs, k):
         preds_at_k = self.generate_binary_at_k(y_pred_probs, k)
         return pd.DataFrame(confusion_matrix(y_test, preds_at_k))
     
