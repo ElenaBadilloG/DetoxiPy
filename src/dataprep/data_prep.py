@@ -58,9 +58,11 @@ class TextPrep:
         return text
 
     def map_punct(self, text):
-        for p in PUNCT_MAP:
-            text = text.replace(p, PUNCT_MAP[p])    
-        return self.rm_punct(text)
+        # for p in PUNCT_MAP:
+        #     text = text.replace(p, PUNCT_MAP[p])
+        text = re.sub(r"[^a-zA-Z0-9]+", " ", text)    
+        # return self.rm_punct(text)
+        return text
     
     def lower_str(self, text):
         return text.lower()
@@ -89,16 +91,16 @@ class TextPrep:
         '''
         if rmCaps == True:
             text = self.lower_str(text)
-        if mapPunct == True:
-            text = self.map_punct(text)
         if clSpecial == True:
             text = self.clean_special_chars(text)
         if spCheck == True:
             text = self.correct_spelling(text)
 
-        text = self.clean_toks(text, rmStop, stem, mpContract)
+        text = self.clean_toks(text, rmStop, stem, mpContract)        
+        if mapPunct == True:
+            text = self.map_punct(text)
         text = self.rm_whitespace(text)
-        
+
         return text
 
 def test(texts):
