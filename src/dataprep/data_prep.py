@@ -78,16 +78,26 @@ class TextPrep:
         for word in SPELL_CORRECT:
             text = text.replace(word, SPELL_CORRECT[word])
         return text
+    
+    def replace_idwords(self, text):
+        exp = lambda kw: r'\b{}\b'.format(kw)
+        for n in ID_WORDS:
+            text = re.sub(exp(n), 'people', text, flags=re.IGNORECASE)
+        for pn in PRONOUNS:
+            text = re.sub(exp(pn), PRONOUNS[pn], text, flags=re.IGNORECASE)
+        return text
 
     def clean(self, text, rmCaps, mapPunct, 
-                    clSpecial, spCheck, rmStop, stem, mpContract):
+                    clSpecial, spCheck, replaceId,
+                    rmStop, stem, mpContract):
         '''
         1. Remove Caps
         2. Map and Remove Punctuation
         3. Clean Special Characters
         4. Correct Spelling Errors
-        5. Clean Tokens: Remove Stopwords, Map Contractions, Stem
-        6. Remove Whitespace
+        5. Replace Identity Words
+        6. Clean Tokens: Remove Stopwords, Map Contractions, Stem
+        7. Remove Whitespace
         '''
         if rmCaps == True:
             text = self.lower_str(text)
@@ -95,6 +105,8 @@ class TextPrep:
             text = self.clean_special_chars(text)
         if spCheck == True:
             text = self.correct_spelling(text)
+        if replaceId == True:
+            text = self.replace_idwords(text)
 
         text = self.clean_toks(text, rmStop, stem, mpContract)        
         if mapPunct == True:
@@ -102,6 +114,16 @@ class TextPrep:
         text = self.rm_whitespace(text)
 
         return text
+    
+def test_idwords():
+    t0 = 'Sherry is a gay woman.'
+    exp0 = 'Sherry is a people people.'
+    t1 = 'I bought this pickle chip at Jewel Osco.'
+    exp1 = 'I bought this pickle chip at Jewel Osco.'
+
+    tp = TextPrep()    
+    print(t0, tp.replace_idwords(t0))
+    print(t1, tp.replace_idwords(t1))
 
 def test(texts):
     tp = TextPrep()

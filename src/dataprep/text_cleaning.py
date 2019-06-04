@@ -1,4 +1,32 @@
 # TEXT CLEANING GLOBAL VARS
+
+IDENTITY_COLUMNS = [
+    'male', 'female', 'homosexual_gay_or_lesbian', 'christian', 'jewish',
+    'muslim', 'black', 'white', 'psychiatric_or_mental_illness'
+]
+ID_WORDS = [
+    'man', 'men', 'boy', 'boys', 'white', 'whites', 
+    'woman', 'girl', 'girls', 'lady', 'ladies'
+    'homosexual', 'homosexuals', 'homo', 'homos', 'queer', 'queers',
+    'gay', 'gays', 'lesbian', 'lesbians',
+    'trans', 'transgender', 'transsexual', 'transgenders', 'transsexuals', 
+    'bi', 'bisexual', 'bisexuals', 'lgbt',
+    'mexican', 'mexicans', 'immigrant', 'immigrants',
+    'jews', 'jew', 'jewish', 'muslim', 'muslims', 'islam', 
+    'christian', 'christians', 'black', 'blacks', 'african', 'africans',
+    'disabled', 'handicapped'
+]
+
+PRONOUNS = {
+    'he': 'they',
+    'she': 'they',
+    'him': 'them',
+    'her': 'them',
+    'his': 'their',
+    'her': 'their',
+    'hers': 'theirs'
+}
+
 PROP_NOUNS = ["republican", "democrat", "trump", "clinton", "hillary"]
 EMOJIS = [":)", ":-)", ":(", ":-(", ":-/", ":/", "-_-", ":|",  ":-|"]
 PUNCT_MAP = {"‘": "'", "₹": "e", "´": "'", "°": "", "€": "e", "™": "tm", "√": " sqrt ",
