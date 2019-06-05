@@ -80,7 +80,7 @@ class TextPrep:
         return text
     
     def replace_idwords(self, text):
-        exp = lambda kw: r'\b{}\b'.format(kw)
+        exp = lambda kw: r'\B|\b{}\b|\B'.format(kw)
         for n in ID_WORDS:
             text = re.sub(exp(n), 'people', text, flags=re.IGNORECASE)
         for pn in PRONOUNS:
@@ -107,10 +107,13 @@ class TextPrep:
             text = self.correct_spelling(text)
         if replaceId == True:
             text = self.replace_idwords(text)
-
+        
         text = self.clean_toks(text, rmStop, stem, mpContract)        
         if mapPunct == True:
             text = self.map_punct(text)
+        if replaceId == True:
+            text = self.replace_idwords(text)
+
         text = self.rm_whitespace(text)
 
         return text
