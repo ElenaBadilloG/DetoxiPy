@@ -1,7 +1,7 @@
 import pandas as pd
 from dataprep.data_prep import TextPrep 
 from featurecreation.feat_create_utils import VocabularyHelper
-from gensim.models import FastText, word2vec
+from gensim.models import FastText, Word2Vec
 import multiprocessing
 from time import time
 
@@ -20,7 +20,7 @@ clean_data = raw_data.apply(text_prepper.clean, rmCaps = True,
 
 # TRAINING THE WORD2VEC
 num_cores = multiprocessing.cpu_count()
-embedder = FastText(min_count = 20, window = 2, size = 64, sample = 6e-5, 
+embedder = Word2Vec(min_count = 20, window = 2, size = 64, sample = 6e-5, 
                     alpha = 0.03, min_alpha = 0.0007, negative = 20, 
                     workers = num_cores - 1)
 
@@ -32,8 +32,8 @@ print('Time to build vocab: {} mins'.format(round((time() - t) / 60, 2)))
 
 # Training the model
 t = time()
-sample_data = clean_data.sample(100000)
-embedder.train(sample_data, total_examples = 100000, epochs = 20,
+sample_data = clean_data.sample(frac = 0.5)
+embedder.train(sample_data, total_examples = len(sample_data), epochs = 20,
                report_delay = 1)
 print('Time to train the model: {} mins'.format(round((time() - t) / 60, 2)))
 
