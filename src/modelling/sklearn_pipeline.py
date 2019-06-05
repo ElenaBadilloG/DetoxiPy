@@ -244,22 +244,24 @@ class Pipeline:
     
     def confusion_matrix(self, y_test, y_pred_probs, k):
         preds_at_k = self.generate_binary_at_k(y_pred_probs, k)
-        return pd.DataFrame(confusion_matrix(y_test, preds_at_k))
-    
-    def feature_importance(self, top_k):
-        '''
-        identify important features using a random forest
-        '''
+        return pd.DataFrame(confusion_matrix(y_test, preds_at_k), columns=['pred_neg', 'pred_pos'])
 
-        importances = self._estimator.feature_importances_
-        indices = np.argsort(importances)[::-1]
-        features = self.X_train.columns.values
-        # Feature Ranking
-        importance = pd.DataFrame(columns=['feature', 'importance'])
-        for f in range(0, top_k):
-            importance.loc[f+1] = [features[indices[f]], importances[indices[f]]]
 
-        return importance
+    def word_importances(self, X_test):
+        '''
+        returns words in ascending sorted order by importance
+        '''
+        model_type = str(type(self.estimator))
+        if 'randomforest' in model_type.lower():
+            importances = self._estimator.feature_importances_
+        elif 'logisticregression' in model_type.lower():
+            coefs = self._estimator.coef_
+            importances = coefs[0]
+        else:
+            print('CANNOT GET FEATURE IMPORTANCES FROM THIS MODEL')
+        perm = importances.argsort()
+        words = X_test.columns.values[perm]
+        return words
 
     
 def model_exec(run_type, iteration_name, grid, 
@@ -297,10 +299,12 @@ def model_exec(run_type, iteration_name, grid,
             precision = pipeline.precision_at_k(y_test, y_test_prob, score_k_val) 
             accuracy = pipeline.accuracy_at_k(y_test, y_test_prob, score_k_val)
             cm = pipeline.confusion_matrix(y_test, y_test_prob, score_k_val)
+            auc_roc = pipeline.auc_roc(y_test, y_test_prob)
 
             print('TEST PRECISION AT {}: {}'.format(score_k_val, precision))
             print('TEST RECALL AT {}: {}'.format(score_k_val, recall))
             print('TEST ACCURACY AT {}: {}'.format(score_k_val, accuracy))
+            print('AUC ROC: {}'.format(auc_roc))
             print('CONFUSION MATRIX:')
             print(cm)
 
