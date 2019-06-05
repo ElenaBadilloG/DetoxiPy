@@ -15,8 +15,9 @@ raw_data = raw_data[text_column]
 text_prepper = TextPrep()
 clean_data = raw_data.apply(text_prepper.clean, rmCaps = True, 
                             mapPunct = True, clSpecial = True, 
-                            spCheck = False, rmStop = False, 
-                            stem = False, mpContract = True)
+                            spCheck = False, replaceId = False, 
+                            rmStop = False, stem = False, 
+                            mpContract = True)
 
 # TRAINING THE WORD2VEC
 num_cores = multiprocessing.cpu_count()
@@ -32,11 +33,11 @@ print('Time to build vocab: {} mins'.format(round((time() - t) / 60, 2)))
 
 # Training the model
 t = time()
-sample_data = clean_data.sample(frac = 0.5)
+sample_data = clean_data.sample(frac = 0.75)
 embedder.train(sample_data, total_examples = len(sample_data), epochs = 20,
                report_delay = 1)
 print('Time to train the model: {} mins'.format(round((time() - t) / 60, 2)))
 
 # Exporting the model weights
 
-embedder.wv.save("featurecreation/embeddings/small_sample_vector_100K_ft.kv")
+embedder.wv.save("featurecreation/embeddings/threequarters_sample_vector_noIDrepl_w2v.kv")
