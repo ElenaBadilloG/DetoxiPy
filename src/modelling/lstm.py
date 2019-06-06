@@ -309,4 +309,4 @@ def main (rem_bias=True, tokenizer = TOKENIZER, frac=FRAC, train_path=TRAIN_PATH
                              axis=0)[:, 0]})
     test_expand, accuracy, precision = get_overall_perf(test, res)
     
-    return get_bias(test_expand, precision)
+return get_bias(test_expand, precision)
