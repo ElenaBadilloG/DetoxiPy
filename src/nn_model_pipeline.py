@@ -149,7 +149,7 @@ txt_token_seq_len = 220
 # EMBEDDINGS LOADER PARAMETERS
 embed_type = "word2vec"
 #wrd_to_ix_dict = tokenizer.word_index
-pretrained_embed_path = "featurecreation/embeddings/small_sample_vector_100K_ft.kv"
+pretrained_embed_path = "featurecreation/embeddings/threequarters_sample_vector_noIDrepl_w2v.kv"
 
 # BUILDING DATASET
 data_result_set = build_datasets(train_path, data_sample_frac, text_colname, 
@@ -172,4 +172,3 @@ test = data_result_set[6]
 embed_loader = EmbeddingsLoader(embed_type = embed_type, 
                                 wrd_to_ix_dict = wrd_to_ix_dict,
                                 pretrained_embed_path = pretrained_embed_path)
-
