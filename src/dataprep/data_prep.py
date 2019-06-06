@@ -90,7 +90,6 @@ class TextPrep:
     def clean(self, text, rm_caps, map_punct, cl_special, sp_check, replace_id,
               rm_stop, stem, mp_contract):
         '''
-        <TODO HYE: REFACTOR FOR STYLE>
         1. Remove Caps
         2. Map and Remove Punctuation
         3. Clean Special Characters
@@ -99,17 +98,17 @@ class TextPrep:
         6. Clean Tokens: Remove Stopwords, Map Contractions, Stem
         7. Remove Whitespace
         '''
-        if rmCaps == True:
+        if rm_caps == True:
             text = self.lower_str(text)
-        if clSpecial == True:
+        if cl_special == True:
             text = self.clean_special_chars(text)
-        if spCheck == True:
+        if sp_check == True:
             text = self.correct_spelling(text)
         
-        text = self.clean_toks(text, rmStop, stem, mpContract)        
-        if mapPunct == True:
+        text = self.clean_toks(text, rm_stop, stem, mp_contract)        
+        if map_punct == True:
             text = self.map_punct(text)
-        if replaceId == True:
+        if replace_id == True:
             text = self.replace_idwords(text)
 
         text = self.rm_whitespace(text)
