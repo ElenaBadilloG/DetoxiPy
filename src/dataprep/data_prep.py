@@ -80,7 +80,7 @@ class TextPrep:
         return text
     
     def replace_idwords(self, text):
-        exp = lambda kw: r'\B|\b{}\b|\B'.format(kw)
+        exp = lambda kw: r'\b{}\b'.format(kw)
         for n in ID_WORDS:
             text = re.sub(exp(n), 'people', text, flags=re.IGNORECASE)
         for pn in PRONOUNS:
