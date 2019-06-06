@@ -280,6 +280,16 @@ class Pipeline:
         eval_df['ytrue'] = y_eval
 
         scores = pd.DataFrame(columns=['identity', 'precision_at_k', 'recall_at_k', 'accuracy_at_k', 'f1_at_k', 'auc_roc'])
+        
+        # GET OVERALL METRIC
+        prec = self.precision_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+        recall = self.recall_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+        acc = self.accuracy_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+        f1 = self.f1_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)   
+        auc_roc = self.auc_roc(eval_df['ytrue'], eval_df['pred_probs']) 
+        scores.loc[len(scores)] = ['overall', prec, recall, acc, f1, auc_roc]
+
+        # METRICS PER IDENTITY
         for identity in IDENTITY_COLUMNS:
             id_df = eval_df[eval_df[identity] == True]
             if id_df['ytrue'].sum() > 1:
@@ -291,30 +301,66 @@ class Pipeline:
             recall = self.recall_at_k(id_df['ytrue'], id_df['pred_probs'], k)
             acc = self.accuracy_at_k(id_df['ytrue'], id_df['pred_probs'], k)
             f1 = self.f1_at_k(id_df['ytrue'], id_df['pred_probs'], k)
-            scores.loc[len(scores)+1] = [identity, prec, recall, acc, f1, auc_roc]
+            scores.loc[len(scores)] = [identity, prec, recall, acc, f1, auc_roc]
 
-        # GET OVERALL METRIC
-        prec = self.precision_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
-        recall = self.recall_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
-        acc = self.accuracy_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
-        f1 = self.f1_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)   
-        auc_roc = self.auc_roc(eval_df['ytrue'], eval_df['pred_probs']) 
-        scores.loc[len(scores)+1] = ['overall', prec, recall, acc, f1, auc_roc]
+       
 
         return scores
     
     def plot_bias(self, scores_df, metric):
+        '''
+        '''
         plt.figure(figsize=(6, 8))
-        overall_score = scores_df.at[10, metric]
+        overall_score = scores_df.at[0, metric]
+        scores_df = scores_df.drop(0)
         colors = ['red' if s < overall_score else 'gray' for s in scores_df[metric]]
-        scores_df = scores_df.drop(10)
+        
         g = sns.barplot(x=scores_df[metric], y=scores_df['identity'], ci=95, palette=colors)
+        plt.axvline(overall_score)
         plt.tick_params(direction='inout', length=4, width=1, colors='black')
         plt.yticks(fontsize=12)
         plt.xticks(fontsize=12)
         plt.title('{} Score by Identity'.format(metric), fontsize = 18)
         sns.despine(bottom=True)
         plt.show()
+    
+    # def overall_bias_score(self, X_test, X_eval, y_eval, k:
+
+    #     eval_df['identity'] = X_eval.max(axis=1)
+    #     eval_df['ytrue'] = y_eval
+    #     eval_df['pred_probs'] = self.gen_pred_probs(X_test)
+
+    #     scores = pd.DataFrame(columns=['identity', 'precision_at_k', 'recall_at_k', 'accuracy_at_k', 'f1_at_k', 'auc_roc'])
+
+    #     prec = self.precision_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+    #     recall = self.recall_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+    #     acc = self.accuracy_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+    #     f1 = self.f1_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)   
+    #     auc_roc = self.auc_roc(eval_df['ytrue'], eval_df['pred_probs']) 
+    #     scores.loc[len(scores)] = ['overall', prec, recall, acc, f1, auc_roc]
+
+    #     for t in (True, False):
+    #         sub = eval_df[eval_df['identity'] == t]
+    #         prec = self.precision_at_k(sub['ytrue'], sub['pred_probs'], k)
+    #         recall = self.recall_at_k(sub['ytrue'], sub['pred_probs'], k)
+    #         acc = self.accuracy_at_k(sub['ytrue'], sub['pred_probs'], k)
+    #         f1 = self.f1_at_k(sub['ytrue'], sub['pred_probs'], k)   
+    #         auc_roc = self.auc_roc(sub['ytrue'], sub['pred_probs']) 
+    #         scores.loc[len(scores)] = [t, prec, recall, acc, f1, auc_roc]
+
+    #             def wav(bias, metric, wb, wm):
+    #         return wb*(1-bias) + (wm*metric)
+        
+    #     scores[scores.]
+    #     scores.lambda()
+        
+
+    #     return scores
+
+    # bias = precNONID - precID
+    # perf = wav(bias, precision,  wb, wp)
+
+
 
 IDENTITY_COLUMNS = [
     'male', 'female', 'homosexual_gay_or_lesbian', 
