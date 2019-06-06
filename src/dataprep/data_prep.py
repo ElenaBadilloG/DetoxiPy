@@ -105,8 +105,6 @@ class TextPrep:
             text = self.clean_special_chars(text)
         if spCheck == True:
             text = self.correct_spelling(text)
-        if replaceId == True:
-            text = self.replace_idwords(text)
         
         text = self.clean_toks(text, rmStop, stem, mpContract)        
         if mapPunct == True:
