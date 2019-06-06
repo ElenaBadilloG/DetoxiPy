@@ -12,6 +12,8 @@ import logging
 import sys
 import os
 import joblib
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 class Pipeline:
     def __init__(self, pipeline_mode, grid_model_id_key=None, 
@@ -244,22 +246,81 @@ class Pipeline:
     
     def confusion_matrix(self, y_test, y_pred_probs, k):
         preds_at_k = self.generate_binary_at_k(y_pred_probs, k)
-        return pd.DataFrame(confusion_matrix(y_test, preds_at_k))
+        return pd.DataFrame(confusion_matrix(y_test, preds_at_k), columns=['pred_neg', 'pred_pos'])
+
+    def word_importances(self, X_test):
+        '''
+        returns words in ascending sorted order by importance
+        '''
+        model_type = str(type(self.estimator))
+        if 'randomforest' in model_type.lower():
+            importances = self._estimator.feature_importances_
+        elif 'logisticregression' in model_type.lower():
+            coefs = self._estimator.coef_
+            importances = coefs[0]
+        else:
+            print('CANNOT GET FEATURE IMPORTANCES FROM THIS MODEL')
+        perm = importances.argsort()
+        words = X_test.columns.values[perm]
+        return words
     
-    def feature_importance(self, top_k):
+    def precision_recall_curve(self, y_test, y_pred_probs):
+        pass
+    
+    def evaluate_bias(self, X_test, X_eval, y_eval, k):
         '''
-        identify important features using a random forest
+        X_test contains original text features
+        X_eval contains IDENTITY Columns
+        y_eval is basically the same as original y_test
         '''
 
-        importances = self._estimator.feature_importances_
-        indices = np.argsort(importances)[::-1]
-        features = self.X_train.columns.values
-        # Feature Ranking
-        importance = pd.DataFrame(columns=['feature', 'importance'])
-        for f in range(0, top_k):
-            importance.loc[f+1] = [features[indices[f]], importances[indices[f]]]
+        y_pred_probs = self.gen_pred_probs(X_test)
+        eval_df = X_eval.copy(deep=True)
+        eval_df['pred_probs'] = y_pred_probs
+        eval_df['ytrue'] = y_eval
 
-        return importance
+        scores = pd.DataFrame(columns=['identity', 'precision_at_k', 'recall_at_k', 'accuracy_at_k', 'f1_at_k', 'auc_roc'])
+        for identity in IDENTITY_COLUMNS:
+            id_df = eval_df[eval_df[identity] == True]
+            if id_df['ytrue'].sum() > 1:
+                auc_roc = self.auc_roc(id_df['ytrue'], id_df['pred_probs'])
+            else: 
+                print('NO TOXIC COMMENTS FOR {}'.format(identity))
+                auc_roc = None
+            prec = self.precision_at_k(id_df['ytrue'], id_df['pred_probs'], k)
+            recall = self.recall_at_k(id_df['ytrue'], id_df['pred_probs'], k)
+            acc = self.accuracy_at_k(id_df['ytrue'], id_df['pred_probs'], k)
+            f1 = self.f1_at_k(id_df['ytrue'], id_df['pred_probs'], k)
+            scores.loc[len(scores)+1] = [identity, prec, recall, acc, f1, auc_roc]
+
+        # GET OVERALL METRIC
+        prec = self.precision_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+        recall = self.recall_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+        acc = self.accuracy_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)
+        f1 = self.f1_at_k(eval_df['ytrue'], eval_df['pred_probs'], k)   
+        auc_roc = self.auc_roc(eval_df['ytrue'], eval_df['pred_probs']) 
+        scores.loc[len(scores)+1] = ['overall', prec, recall, acc, f1, auc_roc]
+
+        return scores
+    
+    def plot_bias(self, scores_df, metric):
+        plt.figure(figsize=(6, 8))
+        overall_score = scores_df.at[10, metric]
+        colors = ['red' if s < overall_score else 'gray' for s in scores_df[metric]]
+        scores_df = scores_df.drop(10)
+        g = sns.barplot(x=scores_df[metric], y=scores_df['identity'], ci=95, palette=colors)
+        plt.tick_params(direction='inout', length=4, width=1, colors='black')
+        plt.yticks(fontsize=12)
+        plt.xticks(fontsize=12)
+        plt.title('{} Score by Identity'.format(metric), fontsize = 18)
+        sns.despine(bottom=True)
+        plt.show()
+
+IDENTITY_COLUMNS = [
+    'male', 'female', 'homosexual_gay_or_lesbian', 
+    'christian', 'jewish',
+    'muslim', 'black', 'white', 'psychiatric_or_mental_illness'
+]
 
     
 def model_exec(run_type, iteration_name, grid, 
@@ -297,10 +358,12 @@ def model_exec(run_type, iteration_name, grid,
             precision = pipeline.precision_at_k(y_test, y_test_prob, score_k_val) 
             accuracy = pipeline.accuracy_at_k(y_test, y_test_prob, score_k_val)
             cm = pipeline.confusion_matrix(y_test, y_test_prob, score_k_val)
+            auc_roc = pipeline.auc_roc(y_test, y_test_prob)
 
             print('TEST PRECISION AT {}: {}'.format(score_k_val, precision))
             print('TEST RECALL AT {}: {}'.format(score_k_val, recall))
             print('TEST ACCURACY AT {}: {}'.format(score_k_val, accuracy))
+            print('AUC ROC: {}'.format(auc_roc))
             print('CONFUSION MATRIX:')
             print(cm)
 

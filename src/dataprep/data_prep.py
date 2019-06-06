@@ -80,17 +80,16 @@ class TextPrep:
         return text
     
     def replace_idwords(self, text):
-        exp = lambda kw: r'\b{}\b'.format(kw)
+        exp = lambda kw: r'\B|\b{}\b|\B'.format(kw)
         for n in ID_WORDS:
             text = re.sub(exp(n), 'people', text, flags=re.IGNORECASE)
         for pn in PRONOUNS:
             text = re.sub(exp(pn), PRONOUNS[pn], text, flags=re.IGNORECASE)
         return text
 
-    def clean(self, text, rmCaps, mapPunct, clSpecial, spCheck, replaceId,
-              rmStop, stem, mpContract):
+    def clean(self, text, rm_caps, map_punct, cl_special, sp_check, replace_id,
+              rm_stop, stem, mp_contract):
         '''
-        <TODO HYE: REFACTOR FOR STYLE>
         1. Remove Caps
         2. Map and Remove Punctuation
         3. Clean Special Characters
@@ -99,18 +98,19 @@ class TextPrep:
         6. Clean Tokens: Remove Stopwords, Map Contractions, Stem
         7. Remove Whitespace
         '''
-        if rmCaps == True:
+        if rm_caps == True:
             text = self.lower_str(text)
-        if clSpecial == True:
+        if cl_special == True:
             text = self.clean_special_chars(text)
-        if spCheck == True:
+        if sp_check == True:
             text = self.correct_spelling(text)
-        if replaceId == True:
+        
+        text = self.clean_toks(text, rm_stop, stem, mp_contract)        
+        if map_punct == True:
+            text = self.map_punct(text)
+        if replace_id == True:
             text = self.replace_idwords(text)
 
-        text = self.clean_toks(text, rmStop, stem, mpContract)        
-        if mapPunct == True:
-            text = self.map_punct(text)
         text = self.rm_whitespace(text)
 
         return text

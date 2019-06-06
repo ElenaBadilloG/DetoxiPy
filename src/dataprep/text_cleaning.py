@@ -1,7 +1,8 @@
 # TEXT CLEANING GLOBAL VARS
 
 IDENTITY_COLUMNS = [
-    'male', 'female', 'homosexual_gay_or_lesbian', 'christian', 'jewish',
+    'male', 'female', 'homosexual_gay_or_lesbian', 
+    'christian', 'jewish',
     'muslim', 'black', 'white', 'psychiatric_or_mental_illness'
 ]
 ID_WORDS = [
