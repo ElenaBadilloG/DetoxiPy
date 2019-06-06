@@ -87,8 +87,8 @@ class TextPrep:
             text = re.sub(exp(pn), PRONOUNS[pn], text, flags=re.IGNORECASE)
         return text
 
-    def clean(self, text, rmCaps, mapPunct, clSpecial, spCheck, replaceId,
-              rmStop, stem, mpContract):
+    def clean(self, text, rm_caps, map_punct, cl_special, sp_check, replace_id,
+              rm_stop, stem, mp_contract):
         '''
         <TODO HYE: REFACTOR FOR STYLE>
         1. Remove Caps
