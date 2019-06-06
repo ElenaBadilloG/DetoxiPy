@@ -287,7 +287,7 @@ def get_bias(test, precision, ident_collist=IDENT_LIST, thresh=0.5, wb=0.3, wp=0
         precNONID = testNONIDprec['correct'].sum()/lenpnonid
 
     bias = precNONID - precID
-    perf = wav(precision, bias, wb, wp)
+    perf = wav(bias, precision,  wb, wp)
     print("Overall Precision: {} \n Bias: {}, \n Overall Performance: {}".format(precision, bias, perf))
     return test, perf, bias
 
